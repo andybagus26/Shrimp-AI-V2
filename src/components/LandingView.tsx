@@ -141,7 +141,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onNavigate, session, o
           <div className="relative glass-card rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="relative overflow-hidden rounded-2xl border border-white/15 shadow-sm bg-white/5">
               <img 
-                src="https://images.unsplash.com/photo-1559737558-2f5a35f4523b?w=800&auto=format&fit=crop&q=80" 
+                src="/sample.jpeg" 
                 alt="Shrimp Scanning Mock" 
                 className="w-full h-48 object-cover object-center brightness-90 contrast-110"
               />
