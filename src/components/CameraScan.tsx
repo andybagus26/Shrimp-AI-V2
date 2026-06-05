@@ -343,7 +343,7 @@ export const CameraScan: React.FC<CameraScanProps> = ({ session, onAddLog, logs,
         healthDiagnosis: result.healthDiagnosis || 'Udang segar sehat visual mengkilap sempurna.',
         marketPricePerKg: result.marketPricePerKg || 52000,
         status: (result.status as any) || 'Segar',
-        imageUrl: base64Data,
+        imageUrl: result.result_image_url || base64Data,
         detectionType: result.detectionType || detectionMode
       };
 

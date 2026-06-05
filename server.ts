@@ -11,6 +11,7 @@ const PORT = 3000;
 
 // Set middleware
 app.use(express.json({ limit: "15mb" }));
+app.use("/static", express.static(path.join(process.cwd(), "static")));
 
 // Initialize GenAI client safely based on credentials
 const apiKey = process.env.GEMINI_API_KEY;
@@ -35,8 +36,109 @@ app.post("/api/analyze-shrimp", async (req, res) => {
       return res.status(400).json({ error: "Data gambar (imageBase64) diperlukan." });
     }
 
+    const cleanMode = detectionType === "disease" ? "disease" : "size";
+
+    // 1. Try to connect to YOLOv8 Flask Server on Port 8000
+    try {
+      const cleanedBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(cleanedBase64, 'base64');
+      const blob = new Blob([buffer], { type: 'image/jpeg' });
+      const formData = new FormData();
+      formData.append('image', blob, 'shrimp.jpg');
+
+      const endpoint = cleanMode === 'disease' ? 'http://127.0.0.1:8000/scan' : 'http://127.0.0.1:8000/scan_size';
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const yoloResult = await response.json();
+        
+        if (cleanMode === 'disease') {
+          const isHealthy = yoloResult.detections.length === 0;
+          const diseaseNames = yoloResult.detections.map((d: any) => d.class_name).join(", ");
+          
+          const freshnessScore = isHealthy ? 95 : Math.max(50, Math.round(90 - yoloResult.detections[0].confidence * 0.3));
+          const status = freshnessScore >= 90 ? "Sangat Segar" : freshnessScore >= 80 ? "Segar" : "Kurang Segar";
+          const diseaseDetected = isHealthy ? "Negatif" : diseaseNames;
+          const healthDiagnosis = isHealthy 
+            ? "Udang sehat, cangkang bening berkilau, bebas patogen visual." 
+            : `Terdeteksi gejala ${diseaseNames} (${Math.round(yoloResult.detections[0].confidence)}% conf).`;
+          
+          return res.json({
+            freshnessScore,
+            sizeClass: "Size 50",
+            estimatedWeightGrams: 20.0,
+            diseaseDetected,
+            healthDiagnosis,
+            marketPricePerKg: isHealthy ? 55000 : 38000,
+            status,
+            detectionType: 'disease',
+            result_image_url: yoloResult.result_image_url
+          });
+        } else {
+          const count = yoloResult.detections.length;
+          const hasValidDetections = yoloResult.detections.length > 0 && yoloResult.detections[0].class_name !== "Udang tidak ditemukan";
+          
+          const estimatedWeightGrams = hasValidDetections 
+            ? parseFloat((yoloResult.total_berat_gram / count).toFixed(1))
+            : 0.0;
+            
+          let sizeClass = "Size 50";
+          let marketPricePerKg = 52000;
+          if (estimatedWeightGrams > 0) {
+            const sizeNum = Math.round(1000 / estimatedWeightGrams);
+            if (sizeNum <= 35) {
+              sizeClass = "Size 30";
+              marketPricePerKg = 72000;
+            } else if (sizeNum <= 45) {
+              sizeClass = "Size 40";
+              marketPricePerKg = 64000;
+            } else if (sizeNum <= 55) {
+              sizeClass = "Size 50";
+              marketPricePerKg = 55000;
+            } else if (sizeNum <= 70) {
+              sizeClass = "Size 60";
+              marketPricePerKg = 47000;
+            } else if (sizeNum <= 90) {
+              sizeClass = "Size 80";
+              marketPricePerKg = 39000;
+            } else {
+              sizeClass = "Size 100";
+              marketPricePerKg = 33000;
+            }
+          } else {
+            sizeClass = "Tidak terdeteksi";
+            marketPricePerKg = 0;
+          }
+          
+          const freshnessScore = hasValidDetections ? 94 : 0;
+          const status = freshnessScore >= 90 ? "Sangat Segar" : freshnessScore >= 80 ? "Segar" : "Kurang Segar";
+          const healthDiagnosis = hasValidDetections
+            ? `Terdeteksi ${count} ekor udang dengan berat rata-rata ${estimatedWeightGrams} gram.`
+            : "Tidak terdeteksi udang dalam gambar.";
+
+          return res.json({
+            freshnessScore,
+            sizeClass,
+            estimatedWeightGrams,
+            diseaseDetected: "Negatif",
+            healthDiagnosis,
+            marketPricePerKg,
+            status,
+            detectionType: 'size',
+            result_image_url: yoloResult.result_image_url
+          });
+        }
+      }
+    } catch (e: any) {
+      console.log("Flask backend on port 8000 is offline or threw an error:", e.message);
+    }
+
+    // 2. Fallback to Gemini AI if configured
     if (ai) {
-      // Clean up base64 prefix if any
       const cleanedBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
       const cleanMode = detectionType === "disease" ? "Deteksi Penyakit AI" : "Deteksi Size & Berat";
@@ -97,16 +199,13 @@ Berikan respons HANYA dalam format JSON valid berupa objek dengan kunci-kunci pe
       }
     }
 
-    // High fidelity realistic fallback simulation when API key is not yet configured,
-    // ensuring the app is always fully interactive, responsive, and robust!
-    const grades = ["Grade A", "Grade B", "Grade C"];
+    // 3. Fallback to realistic mockup data simulation
     const sizes = ["Size 40", "Size 50", "Size 60", "Size 80"];
     const weights = [25.0, 20.0, 16.6, 12.5];
     const index = Math.floor(Math.random() * sizes.length);
     
-    // Simulating slight variation on client request based on selected mode
     const isDiseaseMode = detectionType === "disease";
-    const diseaseTrigger = Math.random() > 0.45; // higher rate for testing
+    const diseaseTrigger = Math.random() > 0.45;
     
     const mockResult = {
       freshnessScore: 82 + Math.floor(Math.random() * 16),
@@ -125,7 +224,6 @@ Berikan respons HANYA dalam format JSON valid berupa objek dengan kunci-kunci pe
       detectionType: detectionType || "size"
     };
 
-    // Return mock results with a slight artificial delay of 1.5 seconds for visual aesthetic
     await new Promise((resolve) => setTimeout(resolve, 1500));
     return res.json(mockResult);
 

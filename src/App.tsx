@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Home, 
   LineChart, 
@@ -26,22 +26,37 @@ import { AnalysisView } from './components/AnalysisView';
 import { ActiveScreen, DashboardTab, UserSession, ScanResult } from './types';
 import { APP_LOGO_URL } from './data';
 
-export default function App() {
-  // Navigation & User Session States
-  const [activeScreen, setActiveScreen] = useState<ActiveScreen>('landing');
-  const [dashboardTab, setDashboardTab] = useState<DashboardTab>('home');
-  
-  const [session, setSession] = useState<UserSession>({
-    fullName: '',
-    email: '',
-    role: '',
-    package: 'Free',
-    billingMode: 'monthly',
-    isLoggedIn: false
-  });
+// Helper: read from localStorage with fallback
+function readLS<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) return JSON.parse(raw) as T;
+  } catch {}
+  return fallback;
+}
 
-  // Client-side Logbook State
-  const [scanLogs, setScanLogs] = useState<ScanResult[]>([
+export default function App() {
+  // Navigation & User Session States — dipersist ke localStorage
+  const [activeScreen, setActiveScreen] = useState<ActiveScreen>(
+    () => readLS<ActiveScreen>('shrimpfy_screen', 'landing')
+  );
+  const [dashboardTab, setDashboardTab] = useState<DashboardTab>(
+    () => readLS<DashboardTab>('shrimpfy_tab', 'home')
+  );
+  
+  const [session, setSession] = useState<UserSession>(
+    () => readLS<UserSession>('shrimpfy_session', {
+      fullName: '',
+      email: '',
+      role: '',
+      package: 'Free',
+      billingMode: 'monthly',
+      isLoggedIn: false
+    })
+  );
+
+  // Client-side Logbook State — dipersist ke localStorage
+  const defaultLogs: ScanResult[] = [
     {
       timestamp: '10.24.15, 05/06/2026',
       freshnessScore: 94,
@@ -64,21 +79,45 @@ export default function App() {
       status: 'Segar',
       detectionType: 'disease'
     }
-  ]);
+  ];
+  const [scanLogs, setScanLogs] = useState<ScanResult[]>(
+    () => readLS<ScanResult[]>('shrimpfy_logs', defaultLogs)
+  );
+
+  // Simpan ke localStorage setiap kali state berubah
+  useEffect(() => {
+    localStorage.setItem('shrimpfy_screen', JSON.stringify(activeScreen));
+  }, [activeScreen]);
+
+  useEffect(() => {
+    localStorage.setItem('shrimpfy_tab', JSON.stringify(dashboardTab));
+  }, [dashboardTab]);
+
+  useEffect(() => {
+    localStorage.setItem('shrimpfy_session', JSON.stringify(session));
+  }, [session]);
+
+  useEffect(() => {
+    localStorage.setItem('shrimpfy_logs', JSON.stringify(scanLogs));
+  }, [scanLogs]);
 
   const handleUpdateSession = (updates: Partial<UserSession>) => {
     setSession((prev) => ({ ...prev, ...updates }));
   };
 
   const handleLogout = () => {
-    setSession({
+    const emptySession: UserSession = {
       fullName: '',
       email: '',
       role: '',
       package: 'Free',
       billingMode: 'monthly',
       isLoggedIn: false
-    });
+    };
+    setSession(emptySession);
+    localStorage.removeItem('shrimpfy_session');
+    localStorage.removeItem('shrimpfy_screen');
+    localStorage.removeItem('shrimpfy_tab');
     setActiveScreen('landing');
   };
 
