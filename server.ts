@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 // Set middleware
 app.use(express.json({ limit: "15mb" }));
@@ -46,7 +46,8 @@ app.post("/api/analyze-shrimp", async (req, res) => {
       const formData = new FormData();
       formData.append('image', blob, 'shrimp.jpg');
 
-      const endpoint = cleanMode === 'disease' ? 'http://127.0.0.1:8000/scan' : 'http://127.0.0.1:8000/scan_size';
+      const flaskBase = process.env.FLASK_API_URL || 'http://127.0.0.1:8000';
+      const endpoint = cleanMode === 'disease' ? `${flaskBase}/scan` : `${flaskBase}/scan_size`;
       
       const response = await fetch(endpoint, {
         method: 'POST',

@@ -6,3 +6,12 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Static uploads (generated at runtime)
+static/uploads/
