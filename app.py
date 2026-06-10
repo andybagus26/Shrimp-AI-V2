@@ -17,8 +17,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Load Model AI
 print("Sedang memuat dua otak Shrimpfy AI...")
-model_penyakit = YOLO('best penyakit.pt') # Model Kotak Penyakit (WSSV/BG)
-model_size = YOLO('best size.pt')         # Model Poligon Jago Deteksi Udang
+model_penyakit = YOLO('best_penyakit.pt') # Model Kotak Penyakit (WSSV/BG)
+model_size = YOLO('best_size.pt')         # Model Poligon Jago Deteksi Udang
 
 @app.route('/')
 def home():

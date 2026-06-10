@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy HANYA file Python dan model AI — abaikan Node.js/React
 COPY app.py .
-COPY "best penyakit.pt" .
-COPY "best size.pt" .
+COPY best_penyakit.pt .
+COPY best_size.pt .
 
 # Buat folder uploads
 RUN mkdir -p static/uploads
