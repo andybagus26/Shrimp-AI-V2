@@ -21,7 +21,6 @@ export const LoginView: React.FC<AuthViewProps> = ({ onNavigate, onLoginSuccess 
       return;
     }
     setLoading(true);
-    // Simulate auth check helper
     setTimeout(() => {
       setLoading(false);
       onLoginSuccess({
@@ -31,6 +30,7 @@ export const LoginView: React.FC<AuthViewProps> = ({ onNavigate, onLoginSuccess 
         role: 'Petambak',
         package: 'Petambak Skala Menengah Atas'
       });
+      onNavigate('dashboard');
     }, 1200);
   };
 
