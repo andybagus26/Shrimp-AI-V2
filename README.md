@@ -1,6 +1,11 @@
 # 🦐 Shrimpfy AI — Platform Deteksi Kualitas Udang Vaname
 
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-shrimp--ai--v2.vercel.app-orange?style=for-the-badge)](https://shrimp-ai-v2.vercel.app)
+[![Railway](https://img.shields.io/badge/🐍%20AI%20Backend-Railway-blueviolet?style=for-the-badge)](https://shrimp-ai-v2-production.up.railway.app)
+
 Platform berbasis **Kecerdasan Buatan (YOLOv8)** untuk mendeteksi kualitas, ukuran (sizing), berat, dan penyakit udang vaname secara real-time melalui kamera atau foto.
+
+> 🚀 **Coba langsung tanpa install:** [https://shrimp-ai-v2.vercel.app](https://shrimp-ai-v2.vercel.app)
 
 ---
 
@@ -247,7 +252,7 @@ kill $(lsof -ti :8000) 2>/dev/null
 | `Port 3000 is already in use` | Jalankan `kill $(lsof -ti :3000)` lalu coba lagi |
 | `ModuleNotFoundError: No module named 'cv2'` | Pastikan virtual environment aktif (`source venv/bin/activate`) |
 | `No module named 'flask'` | Jalankan ulang `pip install flask flask-cors ultralytics opencv-python-headless pillow numpy` |
-| Model YOLO tidak ditemukan | Pastikan `best penyakit.pt` dan `best size.pt` ada di folder root |
+| Model YOLO tidak ditemukan | Pastikan `best_penyakit.pt` dan `best_size.pt` ada di folder root |
 | Hasil scan pakai data simulasi (mock) | Flask server belum aktif — jalankan `python3 app.py` terlebih dahulu |
 
 ---
@@ -255,5 +260,11 @@ kill $(lsof -ti :8000) 2>/dev/null
 ## 👨‍💻 Developer
 
 **Shrimpfy AI** — Platform Kecerdasan Buatan untuk Optimasi Tambak Udang Vaname Indonesia
+
+| | |
+|---|---|
+| 🌐 **Live Demo** | [shrimp-ai-v2.vercel.app](https://shrimp-ai-v2.vercel.app) |
+| 🐍 **AI Backend** | [shrimp-ai-v2-production.up.railway.app](https://shrimp-ai-v2-production.up.railway.app) |
+| 💻 **Source Code** | [github.com/andybagus26/Shrimp-AI-V2](https://github.com/andybagus26/Shrimp-AI-V2) |
 
 > © 2026 Shrimpfy AI. Hak Cipta Dilindungi Undang-Undang.
