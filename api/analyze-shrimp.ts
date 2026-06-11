@@ -40,18 +40,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (cleanMode === "disease") {
           const isHealthy = yoloResult.detections.length === 0;
           const diseaseNames = yoloResult.detections.map((d: any) => d.class_name).join(", ");
-          const freshnessScore = isHealthy ? 95 : Math.max(50, Math.round(90 - yoloResult.detections[0].confidence * 0.3));
-          const status = freshnessScore >= 90 ? "Sangat Segar" : freshnessScore >= 80 ? "Segar" : "Kurang Segar";
+          const confidence = isHealthy ? 0 : yoloResult.detections[0].confidence;
+
+          // Freshness score: tinggi kalau sehat, RENDAH kalau sakit (sesuai keparahan)
+          const freshnessScore = isHealthy
+            ? 90 + Math.floor(Math.random() * 8)  // 90-97 kalau sehat
+            : Math.max(15, Math.round(45 - confidence * 0.3)); // 15-45 kalau sakit
+
+          const status = freshnessScore >= 90 ? "Sangat Segar" : freshnessScore >= 70 ? "Segar" : freshnessScore >= 50 ? "Kurang Segar" : "Tidak Layak";
+
+          // Diagnosis spesifik per jenis penyakit
+          let healthDiagnosis = "Udang sehat, cangkang bening berkilau, bebas patogen visual.";
+          if (!isHealthy) {
+            const d = diseaseNames.toLowerCase();
+            if (d.includes("komplikasi") || (d.includes("wssv") && d.includes("bg"))) {
+              healthDiagnosis = `Infeksi ganda terdeteksi: bercak putih kalsifikasi pada karapas (WSSV) disertai penghitaman insang (Black Gill). Tingkat keparahan tinggi, segera isolasi kolam.`;
+            } else if (d.includes("wssv") || d.includes("white spot")) {
+              healthDiagnosis = `Terdeteksi bercak putih (white spot) pada karapas — gejala khas WSSV. Virus sangat menular, risiko kematian massal tinggi dalam 3-10 hari.`;
+            } else if (d.includes("bg") || d.includes("black gill")) {
+              healthDiagnosis = `Insang berwarna kehitaman abnormal — indikasi Black Gill Syndrome. Umumnya dipicu bakteri/jamur akibat kualitas air buruk. Periksa DO dan salinitas.`;
+            } else {
+              healthDiagnosis = `Terdeteksi gejala ${diseaseNames} (conf: ${Math.round(confidence)}%). Segera lakukan sampling lanjutan dan konsultasi ke ahli akuakultur.`;
+            }
+          }
+
+          // Harga pasar turun drastis jika sakit
+          const marketPricePerKg = isHealthy ? 55000 : Math.max(20000, Math.round(38000 - confidence * 100));
 
           return res.json({
             freshnessScore,
             sizeClass: "Size 50",
             estimatedWeightGrams: 20.0,
             diseaseDetected: isHealthy ? "Negatif" : diseaseNames,
-            healthDiagnosis: isHealthy
-              ? "Udang sehat, cangkang bening berkilau, bebas patogen visual."
-              : `Terdeteksi gejala ${diseaseNames} (${Math.round(yoloResult.detections[0].confidence)}% conf).`,
-            marketPricePerKg: isHealthy ? 55000 : 38000,
+            healthDiagnosis,
+            marketPricePerKg,
             status,
             detectionType: "disease",
             result_image_url: yoloResult.result_image_url,
@@ -126,19 +148,33 @@ Berikan HANYA JSON valid:
     const sizes = ["Size 40", "Size 50", "Size 60", "Size 80"];
     const weights = [25.0, 20.0, 16.6, 12.5];
     const index = Math.floor(Math.random() * sizes.length);
-    const diseaseTrigger = Math.random() > 0.45;
+    const diseaseTrigger = detectionType === "disease" && Math.random() > 0.45;
+    const mockDisease = Math.random() > 0.5 ? "WSSV (White Spot Syndrome)" : "Black Gill Syndrome (BG)";
+
+    // Freshness & diagnosis harus konsisten dengan status penyakit
+    const mockFreshness = diseaseTrigger
+      ? 20 + Math.floor(Math.random() * 20)   // 20-40 kalau sakit
+      : 85 + Math.floor(Math.random() * 12);  // 85-96 kalau sehat
+    const mockStatus = mockFreshness >= 90 ? "Sangat Segar" : mockFreshness >= 70 ? "Segar" : mockFreshness >= 50 ? "Kurang Segar" : "Tidak Layak";
+
+    let mockDiagnosis = "Tubuh udang proporsional berkilau, kalsifikasi cangkang kokoh sempurna.";
+    if (diseaseTrigger) {
+      if (mockDisease.includes("WSSV")) {
+        mockDiagnosis = "Terdeteksi bercak putih pada karapas — gejala WSSV. Virus menular tinggi, risiko kematian massal dalam 3-10 hari. Segera isolasi kolam.";
+      } else {
+        mockDiagnosis = "Insang berwarna kehitaman abnormal — indikasi Black Gill Syndrome. Periksa kualitas air (DO, salinitas) dan lakukan penanganan antibakteri.";
+      }
+    }
 
     await new Promise((r) => setTimeout(r, 1500));
     return res.json({
-      freshnessScore: 82 + Math.floor(Math.random() * 16),
+      freshnessScore: mockFreshness,
       sizeClass: sizes[index],
       estimatedWeightGrams: parseFloat((weights[index] + (Math.random() * 2 - 1)).toFixed(1)),
-      diseaseDetected: detectionType === "disease" && diseaseTrigger
-        ? Math.random() > 0.5 ? "WSSV (White Spot Syndrome)" : "Myo (IMNV)"
-        : "Negatif",
-      healthDiagnosis: "Tubuh udang proporsional berkilau, kalsifikasi cangkang kokoh.",
-      marketPricePerKg: [58000, 51000, 43000, 35000][index],
-      status: index < 2 ? "Sangat Segar" : "Segar",
+      diseaseDetected: diseaseTrigger ? mockDisease : "Negatif",
+      healthDiagnosis: mockDiagnosis,
+      marketPricePerKg: diseaseTrigger ? 22000 : [58000, 51000, 43000, 35000][index],
+      status: mockStatus,
       detectionType: detectionType || "size",
     });
   } catch (error: any) {
