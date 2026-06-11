@@ -618,41 +618,45 @@ export const CameraScan: React.FC<CameraScanProps> = ({ session, onAddLog, logs,
               </div>
             </div>
 
-            {/* Standard parameter grids */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5 text-primary" /> Ukuran (Sizing)
-                </span>
-                <p className="text-sm font-extrabold text-white mt-1">{latestReport.sizeClass}</p>
-                <p className="text-[9px] text-white/50 mt-0.5 font-mono"> Rujukan pedagang</p>
-              </div>
+            {/* Standard parameter grids — conditional by mode */}
+            {latestReport.detectionType === 'size' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
+                    <TrendingUp className="w-3.5 h-3.5 text-primary" /> Ukuran (Sizing)
+                  </span>
+                  <p className="text-sm font-extrabold text-white mt-1">{latestReport.sizeClass}</p>
+                  <p className="text-[9px] text-white/50 mt-0.5 font-mono"> Rujukan pedagang</p>
+                </div>
 
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
-                  <Activity className="w-3.5 h-3.5 text-primary" /> Bobot Berat
-                </span>
-                <p className="text-sm font-extrabold text-white mt-1">{latestReport.estimatedWeightGrams} gr</p>
-                <p className="text-[9px] text-white/50 mt-0.5 font-mono">Estimasi per ekor</p>
+                <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5 text-primary" /> Bobot Berat
+                  </span>
+                  <p className="text-sm font-extrabold text-white mt-1">{latestReport.estimatedWeightGrams} gr</p>
+                  <p className="text-[9px] text-white/50 mt-0.5 font-mono">Estimasi per ekor</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Disease Alerts Flag */}
-            <div className={`p-3 rounded-xl border flex items-start gap-2.5 ${
-              latestReport.diseaseDetected === 'Negatif' 
-                ? 'bg-sehat/10 border-sehat/20 text-sehat' 
-                : 'bg-danger/10 border-danger/20 text-danger'
-            }`}>
-              {latestReport.diseaseDetected === 'Negatif' ? (
-                <CheckCircle2 className="w-4.5 h-4.5 text-sehat shrink-0 mt-0.5" />
-              ) : (
-                <ShieldAlert className="w-4.5 h-4.5 text-danger shrink-0 mt-0.5" />
-              )}
-              <div>
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider">Status Patogen Penyakit</span>
-                <p className="text-xs font-bold mt-0.5">{latestReport.diseaseDetected}</p>
+            {/* Disease Alert — hanya tampil di mode disease */}
+            {latestReport.detectionType === 'disease' && (
+              <div className={`p-3 rounded-xl border flex items-start gap-2.5 ${
+                latestReport.diseaseDetected === 'Negatif' 
+                  ? 'bg-sehat/10 border-sehat/20 text-sehat' 
+                  : 'bg-danger/10 border-danger/20 text-danger'
+              }`}>
+                {latestReport.diseaseDetected === 'Negatif' ? (
+                  <CheckCircle2 className="w-4.5 h-4.5 text-sehat shrink-0 mt-0.5" />
+                ) : (
+                  <ShieldAlert className="w-4.5 h-4.5 text-danger shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider">Status Patogen Penyakit</span>
+                  <p className="text-xs font-bold mt-0.5">{latestReport.diseaseDetected}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Diagnosis note */}
             <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-xs text-white/70 leading-normal">
@@ -802,24 +806,45 @@ export const CameraScan: React.FC<CameraScanProps> = ({ session, onAddLog, logs,
                   </div>
                 </div>
 
-                {/* 2. Grid for parameters */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-primary" /> Ukuran (Sizing)
-                    </span>
-                    <p className="text-xs font-extrabold text-white mt-1">{selectedLog.sizeClass}</p>
-                    <p className="text-[8px] text-white/50 mt-0.5 font-mono">Rujukan perdagangan tambak</p>
-                  </div>
+                {/* 2. Grid — conditional by mode */}
+                {selectedLog.detectionType === 'size' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-primary" /> Ukuran (Sizing)
+                      </span>
+                      <p className="text-xs font-extrabold text-white mt-1">{selectedLog.sizeClass}</p>
+                      <p className="text-[8px] text-white/50 mt-0.5 font-mono">Rujukan perdagangan tambak</p>
+                    </div>
 
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
-                      <Activity className="w-3.5 h-3.5 text-primary" /> Bobot Berat
-                    </span>
-                    <p className="text-xs font-extrabold text-white mt-1">{selectedLog.estimatedWeightGrams} gr</p>
-                    <p className="text-[8px] text-white/50 mt-0.5 font-mono">Estimasi berat per ekor</p>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider font-mono flex items-center gap-1">
+                        <Activity className="w-3.5 h-3.5 text-primary" /> Bobot Berat
+                      </span>
+                      <p className="text-xs font-extrabold text-white mt-1">{selectedLog.estimatedWeightGrams} gr</p>
+                      <p className="text-[8px] text-white/50 mt-0.5 font-mono">Estimasi berat per ekor</p>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* 2b. Disease detail — hanya di mode disease */}
+                {selectedLog.detectionType === 'disease' && (
+                  <div className={`p-3 rounded-xl border flex items-start gap-2.5 ${
+                    selectedLog.diseaseDetected === 'Negatif'
+                      ? 'bg-sehat/10 border-sehat/20 text-sehat'
+                      : 'bg-danger/10 border-danger/20 text-danger'
+                  }`}>
+                    {selectedLog.diseaseDetected === 'Negatif' ? (
+                      <CheckCircle2 className="w-4 h-4 text-sehat shrink-0 mt-0.5" />
+                    ) : (
+                      <ShieldAlert className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <span className="text-[10px] font-bold font-mono uppercase tracking-wider">Status Patogen Penyakit</span>
+                      <p className="text-xs font-bold mt-0.5">{selectedLog.diseaseDetected}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* 3. Diagnosis and health notes */}
                 <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 text-xs text-white/80 leading-relaxed">
